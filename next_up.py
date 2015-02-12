@@ -35,6 +35,9 @@ my_bugs = db['my_bugs']
 my_cards = db['my_cards']
 
 
+always_fetch = False
+
+
 class CacheEntry():
     def __init__(self, db, url):
         self._db = db
@@ -60,7 +63,7 @@ class CacheEntry():
             del self.entry['new']
             self.save()
 
-def get_url(url, auth=None, always_fetch=True):
+def get_url(url, auth=None, always_fetch=always_fetch):
     with CacheEntry(web_cache, url) as c:
         # TODO: handle etags
         if always_fetch:
@@ -161,7 +164,9 @@ def api_my_bugs():
     # TODO: Combine my_bugs and watched_bugs into just bugs.
     # TODO: return {'mine': [], 'watched': []}
     # This allows get_bugs followed by return of both!
-    get_bugs()
+
+    if always_fetch:
+        get_bugs()
     return json_util.dumps(my_bugs.find())
 
 @app.route('/API/watched_bugs')
