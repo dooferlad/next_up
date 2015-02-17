@@ -4,12 +4,25 @@
 
 var mediaControllers = angular.module('mediaControllers', []);
 
-mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$routeParams',
-  function ($scope, $http, $routeParams) {
+mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
+  function ($scope, $http, $interval) {
 
 
     $scope.socket = io();
     $scope.socket.on('update', function(msg) {
+      $scope.update();
+    });
+
+    var update_promise = $interval($scope.update, 60);
+
+    $scope.$on('$destroy', function(){
+      if (angular.isDefined(promise)) {
+        $interval.cancel(promise);
+        update_promise = undefined;
+      }
+    });
+
+    $scope.update = function() {
       $http.get('/API/cards').success(function (data) {
         // We could fromat the data here so we can foreach over many data sources:
         // $scope.content.push({'heading': 'Cards', 'data': data});
@@ -44,7 +57,7 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$routeParams',
       $http.get('/API/watched_reviews').success(function (data) {
         $scope.watched_reviews = data;
       });
-    });
+    };
 
     /*$http.get('/API/cal').success(function (data) {
       //$scope.cal = data;
