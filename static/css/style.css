@@ -1,0 +1,19 @@
+md-item-content h1 {
+  font-size: 12pt;
+  margin: 0.2pt;
+  border: 0.2pt;
+  padding: 0pt;
+}
+
+md-item-content p {
+  font-size: 10pt;
+  margin: 0.2pt;
+  border: 0.2pt;
+  padding: 0pt;
+}
+
+md-item-content {
+  margin: 0.2pt;
+  border: 0.2pt;
+  padding: 0pt;
+}

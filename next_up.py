@@ -1,41 +1,30 @@
-from flask import Flask
-from flask.ext.socketio import SocketIO, emit
-
 import requests
 from requests.auth import HTTPBasicAuth
 import json
 import settings
 import pymongo
 import os
-from pprint import pprint
 from launchpadlib.launchpad import Launchpad
 import re
 from bson import json_util
 import datetime
 from dateutil import rrule, parser
+import time
 
 
 BASE_DIR = os.path.dirname(__file__)
-
-app = Flask(__name__,
-            static_url_path='/static',
-            static_folder=os.path.join(BASE_DIR, 'static'),
-)
-socketio = SocketIO(app)
-
-app.debug = True
 client = pymongo.MongoClient()
 db = client['next_up']
-#db.drop_collection('web_cache')
 web_cache = db['web_cache']
 lp_bug_cache = db['lp_bug_cache']
 bug_watch = db['bug_watch']
-#db['my_bugs'].drop()
 my_bugs = db['my_bugs']
 my_cards = db['my_cards']
+my_review_requests = db['my_review_requests']
+watched_review_requests = db['watched_review_requests']
 
 
-always_fetch = False
+always_fetch = True
 
 
 class CacheEntry():
@@ -63,6 +52,7 @@ class CacheEntry():
             del self.entry['new']
             self.save()
 
+
 def get_url(url, auth=None, always_fetch=always_fetch):
     with CacheEntry(web_cache, url) as c:
         # TODO: handle etags
@@ -74,7 +64,7 @@ def get_url(url, auth=None, always_fetch=always_fetch):
             c['content'] = r.content
         return c['content']
 
-@app.route('/API/cards')
+
 def get_cards():
     url = 'https://canonical.leankit.com/kanban/api/boards/103148069'
     auth = HTTPBasicAuth(settings.leankit_user, settings.leankit_pass)
@@ -85,12 +75,17 @@ def get_cards():
         for card in lane['Cards']:
             for user in card['AssignedUsers']:
                 if user['FullName'] == 'James Tunnicliffe':
-                    card['CardUrl'] = 'https://canonical.leankit.com/Boards/View/103148069/' + str(card['Id'])
-                    card['BoardTitle'] = board['ReplyData'][0]['Title']
-                    card['LaneTitle'] = lane['Title']
-                    cards.append(card)
+                    url = 'https://canonical.leankit.com/Boards/View/103148069/' + str(card['Id'])
+                    c = my_cards.find_one({'CardUrl': url})
+                    if c is None:
+                        c = {}
 
-    return json.dumps(cards)
+                    c['CardUrl'] = url
+                    c['BoardTitle'] = board['ReplyData'][0]['Title']
+                    c['LaneTitle'] = lane['Title']
+                    c['Title'] = card['Title']
+                    my_cards.save(c)
+
 
 def get_bugs():
     cachedir = os.path.join(BASE_DIR, '.launchpadlib/cache/')
@@ -157,32 +152,8 @@ def get_bugs():
             if updated:
                 bug_watch.save(bug)
 
-    #return data['lp_bugs']
 
-@app.route('/API/my_bugs')
-def api_my_bugs():
-    # TODO: Combine my_bugs and watched_bugs into just bugs.
-    # TODO: return {'mine': [], 'watched': []}
-    # This allows get_bugs followed by return of both!
-
-    if always_fetch:
-        get_bugs()
-    return json_util.dumps(my_bugs.find())
-
-@app.route('/API/watched_bugs')
-def api_watched_bugs():
-    #get_bugs()
-    return json_util.dumps(bug_watch.find())
-
-
-@app.route('/API/github/<path:path>')
-def api_github_pulls(path):
-    auth = HTTPBasicAuth(settings.GITHUB_USER, settings.GITHUB_PASS)
-    return get_url('https://api.github.com/' + path, auth)
-
-
-@app.route('/API/reviews')
-def api_reviews():
+def get_reviews():
     watched = json.loads(get_url('http://' +
                    settings.REVIEWBOARD_DOMAIN +
                    '/api/users/' +
@@ -193,18 +164,25 @@ def api_reviews():
                    settings.REVIEWBOARD_DOMAIN +
                    '/api/review-requests/'))
 
-    my_reviews = {
-        'review_requests': [],
-        'watched_review_requests': watched['watched_review_requests'],
-    }
     for r in all['review_requests']:
         if r['links']['submitter']['title'] == settings.REVIEWBOARD_USER:
-            my_reviews['review_requests'].append(r)
+            rev = my_review_requests.find_one({'absolute_url': r['absolute_url']})
+            if rev is None:
+                rev = {}
+            for k, v in r:
+                rev[k] = v
+            my_review_requests.save(rev)
 
-    return json.dumps(my_reviews)
+    for r in watched['watched_review_requests']:
+        rev = watched_review_requests.find_one({'absolute_url': r['absolute_url']})
+        if rev is None:
+            rev = {}
+        for k, v in r:
+            rev[k] = v
+        watched_review_requests.save(rev)
 
-@app.route('/API/cal')
-def api_calendar():
+
+def parse_calendar():
     cal_noise = get_url(settings.ICAL_URL, always_fetch=True)
     state = None
     cal_lines = []
@@ -299,12 +277,10 @@ def api_calendar():
 
     return json.dumps(jsonable)
 
-@app.route('/')
-def hello_world():
-    return open(os.path.join(BASE_DIR, 'static/index.html')).read()
-
 
 if __name__ == '__main__':
-    #get_bugs()
-    #app.run()
-    socketio.run(app)
+    while True:
+        get_bugs()
+        get_cards()
+        get_reviews()
+        time.sleep(60*5)

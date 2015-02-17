@@ -1,0 +1,70 @@
+<!--
+<h2>Calendar</h2>
+<div class="panel panel-default opacity9">
+  <div class="panel-body">
+    <div ng-repeat="event in cal | orderBy:'starttime'">
+      <div class="min-padding col-md-4">{{ event.dtstart }}</div>
+      <div class="min-padding col-md-8">{{ event.summary }}</div>
+    </div>
+  </div>
+  <div class="clearfix"></div>
+</div>
+-->
+
+<h2>Cards</h2>
+<div layout="column">
+  <div ng-repeat="card in cards | filter:card_filter"
+      class="min-padding">
+    <a href="{{ card.CardUrl }}">{{ card.Title }}</a>
+  </div>
+</div>
+
+<h2>Bugs</h2>
+<div class="panel panel-default opacity9">
+  <h3>Mine</h3>
+  <div class="panel-body">
+    <div ng-repeat="bug in my_bugs | filter:bug_filter"
+        class="min-padding">
+      <a href="{{ bug.url }}">{{ bug.title }}</a>
+    </div>
+  </div>
+  <div class="clearfix"></div>
+  <h3>Watched</h3>
+  <form>
+    <input type="text" placeholder="Bug URL" ng-model="bug_url">
+    <button class="btn btn-default btn-xs" type="submit" ng-click="bug_url_submit(bug_url)">Add Watch</button>
+  </form>
+  <div class="panel-body">
+    <div ng-repeat="bug in watched_bugs"
+        class="min-padding">
+      <a href="{{ bug.url }}">{{ bug.title }}</a>
+    </div>
+  </div>
+  <div class="clearfix"></div>
+</div>
+
+<h2>Pull Requests</h2>
+<div class="panel panel-default opacity9">
+  <div class="panel-body">
+    <div ng-repeat="pull in pull_reqs"
+        class="min-padding">
+      <a href="{{ pull.html_url }}">{{ pull.title }}</a>
+    </div>
+  </div>
+  <div class="clearfix"></div>
+</div>
+
+<h2>Review Requests</h2>
+<div class="panel panel-default opacity9">
+  <div class="panel-body">
+    <div ng-repeat="review in reviews.review_requests"
+        class="min-padding">
+      <a href="{{ review.absolute_url }}">{{ review.description }}</a>
+    </div>
+    <div ng-repeat="review in reviews.watched_review_requests"
+        class="min-padding">
+      <a href="{{ review.absolute_url }}">{{ review.description }}</a>
+    </div>
+  </div>
+  <div class="clearfix"></div>
+</div>
