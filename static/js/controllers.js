@@ -13,7 +13,10 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
       $scope.update();
     });
 
-    var update_promise = $interval($scope.update, 60);
+    // Update our data sources every 60 seconds. AngularJS redraws the UI for us :-)
+    var update_promise = $interval(function() {
+      $scope.update();
+    }, 60 * 1000);
 
     $scope.$on('$destroy', function(){
       if (angular.isDefined(promise)) {
