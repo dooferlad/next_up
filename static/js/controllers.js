@@ -7,37 +7,43 @@ var mediaControllers = angular.module('mediaControllers', []);
 mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$routeParams',
   function ($scope, $http, $routeParams) {
 
-    $scope.content = [];
 
-    $http.get('/API/cards').success(function (data) {
-      // We could fromat the data here so we can foreach over many data sources:
-      // $scope.content.push({'heading': 'Cards', 'data': data});
-      // This reduces flexibility though - can't handle cards differently from
-      // bugs. Fine for name + url lists, not useful for other stuff.
-      $scope.cards = data;
-    });
+    $scope.socket = io();
+    $scope.socket.on('update', function(msg) {
+      $http.get('/API/cards').success(function (data) {
+        // We could fromat the data here so we can foreach over many data sources:
+        // $scope.content.push({'heading': 'Cards', 'data': data});
+        // This reduces flexibility though - can't handle cards differently from
+        // bugs. Fine for name + url lists, not useful for other stuff.
+        $scope.cards = data;
+      });
 
-    $http.get('/API/bugs').success(function (data) {
-      $scope.my_bugs = data;
-    });
+      $http.get('/API/bugs').success(function (data) {
+        $scope.my_bugs = data;
+      });
 
-    $http.get('/API/watched_bugs').success(function (data) {
-      $scope.watched_bugs = data;
-    });
+      /*$http.get('/API/watched_bugs').success(function (data) {
+        $scope.watched_bugs = data;
+      });*/
 
-    $http.get('/API/github/repos/juju/juju/pulls').success(function (data) {
-      var juju_pull_reqs = data;
-      $scope.pull_reqs = [];
-      juju_pull_reqs.every(function(currentValue, index, array){
-        if(currentValue.user.login == "dooferlad") {
-          $scope.pull_reqs.push(currentValue);
-        }
-        return true;
-      })
-    });
+      $http.get('http://api.github.com/repos/juju/juju/pulls').success(function (data) {
+        var juju_pull_reqs = data;
+        $scope.pull_reqs = [];
+        juju_pull_reqs.every(function(currentValue, index, array){
+          if(currentValue.user.login == "dooferlad") {
+            $scope.pull_reqs.push(currentValue);
+          }
+          return true;
+        })
+      });
 
-    $http.get('/API/reviews').success(function (data) {
-      $scope.reviews = data;
+      $http.get('/API/review_requests').success(function (data) {
+        $scope.review_requests = data;
+      });
+
+      $http.get('/API/watched_reviews').success(function (data) {
+        $scope.watched_reviews = data;
+      });
     });
 
     /*$http.get('/API/cal').success(function (data) {

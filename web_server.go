@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -24,7 +25,12 @@ func collectionToJson(response http.ResponseWriter, collection *mgo.Collection) 
 		panic(err)
 	}
 	response.Header().Set("Content-Type", "application/vnd.api+json")
-	json.NewEncoder(response).Encode(data)
+	if len(data) > 0 {
+		// We don't want to encode a zero length list as "null", so we only
+		// write a response if there is something to write. This makes JSON
+		// decoders happier.
+		json.NewEncoder(response).Encode(data)
+	}
 }
 
 func (state ServerState) apiCardsHandler(response http.ResponseWriter, request *http.Request) {
@@ -61,6 +67,28 @@ func main() {
 	api.HandleFunc("/bugs", state.apiBugsHandler)
 	api.HandleFunc("/review_requests", state.apiReviewRequestsHandler)
 	api.HandleFunc("/watched_reviews", state.apiWatchedReviewsHandler)
+
+	server, err := socketio.NewServer(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	server.On("connection", func(so socketio.Socket) {
+		log.Println("on connection")
+		so.Join("updates")
+		so.Emit("update", "hello")
+		so.On("chat message", func(msg string) {
+			log.Println("emit:", so.Emit("chat message", msg))
+			so.BroadcastTo("chat", "chat message", msg)
+		})
+		so.On("disconnection", func() {
+			log.Println("on disconnect")
+		})
+	})
+	server.On("error", func(so socketio.Socket, err error) {
+		log.Println("error:", err)
+	})
+
+	http.Handle("/socket.io/", server)
 
 	http.Handle("/", router)
 	log.Fatal(http.ListenAndServe(":8000", nil))

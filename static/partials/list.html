@@ -29,6 +29,7 @@
     </div>
   </div>
   <div class="clearfix"></div>
+  <!--
   <h3>Watched</h3>
   <form>
     <input type="text" placeholder="Bug URL" ng-model="bug_url">
@@ -41,6 +42,7 @@
     </div>
   </div>
   <div class="clearfix"></div>
+  -->
 </div>
 
 <h2>Pull Requests</h2>
@@ -57,11 +59,11 @@
 <h2>Review Requests</h2>
 <div class="panel panel-default opacity9">
   <div class="panel-body">
-    <div ng-repeat="review in reviews.review_requests"
+    <div ng-repeat="review in _review_requests"
         class="min-padding">
       <a href="{{ review.absolute_url }}">{{ review.description }}</a>
     </div>
-    <div ng-repeat="review in reviews.watched_review_requests"
+    <div ng-repeat="review in watched_reviews"
         class="min-padding">
       <a href="{{ review.absolute_url }}">{{ review.description }}</a>
     </div>
