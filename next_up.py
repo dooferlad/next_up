@@ -16,7 +16,6 @@ BASE_DIR = os.path.dirname(__file__)
 client = pymongo.MongoClient()
 db = client['next_up']
 web_cache = db['web_cache']
-lp_bug_cache = db['lp_bug_cache']
 bug_watch = db['bug_watch']
 my_bugs = db['my_bugs']
 my_cards = db['my_cards']
@@ -95,7 +94,7 @@ def get_bugs():
     for bug in me.searchTasks(assignee=me):
         db_bug = my_bugs.find_one({'self_link': bug.bug.self_link})
         if not db_bug:
-            db_bug = {}
+            db_bug = {'self_link': bug.bug.self_link}
         db_bug['id'] = bug.bug.id
         db_bug['http_etag'] = bug.http_etag
         db_bug['title'] = bug.bug.title
@@ -109,8 +108,7 @@ def get_bugs():
         for bug in parent_bug.related_tasks.entries:
             db_bug = my_bugs.find_one({'self_link': bug['self_link']})
             if not db_bug:
-                db_bug = {}
-            db_bug['self_link'] = bug['self_link']
+                db_bug = {'self_link': bug['self_link']}
             db_bug['id'] = parent_bug.bug.id
             db_bug['http_etag'] = bug['http_etag']
             db_bug['title'] = bug['title']
