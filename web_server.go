@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+    "fmt"
 	"log"
 	"net/http"
 
@@ -16,6 +17,8 @@ type ServerState struct {
 	bugs            *mgo.Collection
 	review_requests *mgo.Collection
 	watched_reviews *mgo.Collection
+    messages        *mgo.Collection
+    socket          *socketio.Socket
 }
 
 func collectionToJson(response http.ResponseWriter, collection *mgo.Collection) {
@@ -46,6 +49,35 @@ func (state ServerState) apiWatchedReviewsHandler(response http.ResponseWriter, 
 	collectionToJson(response, state.watched_reviews)
 }
 
+type Message struct {
+    K string
+    V string
+    T float64
+}
+
+func (state* ServerState) forwardUpdatesToSocketIO() {
+    fmt.Println("forwardUpdatesToSocketIO")
+    iter := state.messages.Find(nil).Sort("$natural").Tail(-1)
+    //var result interface{}
+    var result Message
+    var update_time float64 = 0.0
+    for {
+         for iter.Next(&result) {
+             fmt.Printf("%v, %f %v\n", result, update_time, state.socket)
+             if result.K == "update_time" && result.T > update_time && state.socket != nil {
+                 fmt.Println("ping!")
+                 update_time = result.T
+                 so := *state.socket
+                 so.Emit("update", "db")
+             }
+         }
+         if iter.Err() != nil {
+             break
+         }
+    }
+    iter.Close()
+}
+
 var router = mux.NewRouter()
 
 func main() {
@@ -55,10 +87,30 @@ func main() {
 	}
 	defer sess.Close()
 	state := ServerState{}
-	state.cards = sess.DB("next_up").C("my_cards")
-	state.bugs = sess.DB("next_up").C("my_bugs")
-	state.review_requests = sess.DB("next_up").C("my_review_requests")
-	state.watched_reviews = sess.DB("next_up").C("my_watched_reviews")
+    db := sess.DB("next_up")
+	state.cards = db.C("my_cards")
+	state.bugs = db.C("my_bugs")
+	state.review_requests = db.C("my_review_requests")
+	state.watched_reviews = db.C("my_watched_reviews")
+    state.socket = nil
+
+    found_messages := false
+    names, _ := db.CollectionNames()
+    for _, name := range names {
+        if name == "messages" {
+            found_messages = true
+            break
+        }
+    }
+    if !found_messages {
+        var messages_info = mgo.CollectionInfo{
+            Capped: true,
+            MaxDocs: 200,
+        }
+        db.C("messages").Create(&messages_info)
+    }
+
+    state.messages = db.C("messages")
 
 	api := router.PathPrefix("/API").Subrouter()
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
@@ -74,7 +126,9 @@ func main() {
 	}
 	server.On("connection", func(so socketio.Socket) {
 		log.Println("on connection")
-		so.Join("updates")
+        so.Join("updates")
+        state.socket = &so
+
 		so.Emit("update", "hello")
 		so.On("chat message", func(msg string) {
 			log.Println("emit:", so.Emit("chat message", msg))
@@ -87,6 +141,8 @@ func main() {
 	server.On("error", func(so socketio.Socket, err error) {
 		log.Println("error:", err)
 	})
+
+    go state.forwardUpdatesToSocketIO()
 
 	http.Handle("/socket.io/", server)
 

@@ -16,6 +16,7 @@
   <div ng-repeat="card in cards | filter:card_filter"
       class="min-padding">
     <a href="{{ card.CardUrl }}">{{ card.Title }}</a>
+    <span class="label" ng-class="cardLaneLabel(card)">{{ card.LaneTitle }}</span>
   </div>
 </div>
 
@@ -26,6 +27,8 @@
     <div ng-repeat="bug in my_bugs | filter:bug_filter"
         class="min-padding">
       <a href="{{ bug.url }}">{{ bug.title }}</a>
+      <span class="label" ng-class="bugLabelImportance(bug)">{{ bug.importance }}</span>
+      <span class="label" ng-class="bugLabelStatus(bug)">{{ bug.status }}</span>
     </div>
   </div>
   <div class="clearfix"></div>

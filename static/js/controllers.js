@@ -13,9 +13,18 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
       $scope.update();
     });
 
-    // Update our data sources every 60 seconds. AngularJS redraws the UI for us :-)
+    // Update our github sources every 60 seconds. AngularJS re-draws the UI for us :-)
     var update_promise = $interval(function() {
-      $scope.update();
+      $http.get('http://api.github.com/repos/juju/juju/pulls').success(function (data) {
+        var juju_pull_reqs = data;
+        $scope.pull_reqs = [];
+        juju_pull_reqs.every(function(currentValue, index, array){
+          if(currentValue.user.login == "dooferlad") {
+            $scope.pull_reqs.push(currentValue);
+          }
+          return true;
+        })
+      });
     }, 60 * 1000);
 
     $scope.$on('$destroy', function(){
@@ -41,17 +50,6 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
       /*$http.get('/API/watched_bugs').success(function (data) {
         $scope.watched_bugs = data;
       });*/
-
-      $http.get('http://api.github.com/repos/juju/juju/pulls').success(function (data) {
-        var juju_pull_reqs = data;
-        $scope.pull_reqs = [];
-        juju_pull_reqs.every(function(currentValue, index, array){
-          if(currentValue.user.login == "dooferlad") {
-            $scope.pull_reqs.push(currentValue);
-          }
-          return true;
-        })
-      });
 
       $http.get('/API/review_requests').success(function (data) {
         $scope.review_requests = data;
@@ -92,5 +90,59 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
 
     $scope.bug_url_submit = function(bug_url) {
       console.log(bug_url);
-    }
+    };
+
+    $scope.bugLabelImportance = function(bug) {
+      switch(bug.importance) {
+        case "Undecided":
+          return "";
+        case "Critical":
+          return "label-danger";
+        case "High":
+          return "label-warning";
+        case "Medium":
+          return "label-success";
+        case "Low":
+          return "label-primary";
+        case "Wishlist":
+          return "label-info";
+      }
+      return "";
+    };
+
+    $scope.bugLabelStatus = function(bug) {
+      switch(bug.status) {
+        case "Invalid":
+        case "Won't Fix":
+          return "";
+        case "New":
+          return "label-danger";
+        case "Triaged":
+          return "label-warning";
+        case "Fix Committed":
+        case "Fix Released":
+          return "label-success";
+        case "Opinion":
+          return "label-primary";
+        case "In Progress":
+          return "label-info";
+      }
+      return "";
+    };
+
+    $scope.cardLaneLabel = function(card) {
+      switch(card.LaneTitle) {
+        case "Done":
+        case "Archive":
+        case "Backlog":
+          return "";
+        case "Review":
+          return "label-success";
+        case "Investigating":
+          return "label-primary";
+        case "Coding":
+          return "label-info";
+      }
+      return "label-danger";
+    };
   }]);

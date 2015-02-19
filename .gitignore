@@ -56,4 +56,7 @@ docs/_build/
 # PyBuilder
 target/
 
-
+.idea
+.launchpadlib
+settings.yaml
+next_up

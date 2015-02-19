@@ -10,6 +10,7 @@ from bson import json_util
 import datetime
 from dateutil import rrule, parser
 import time
+import copy
 
 
 BASE_DIR = os.path.dirname(__file__)
@@ -21,7 +22,10 @@ my_bugs = db['my_bugs']
 my_cards = db['my_cards']
 my_review_requests = db['my_review_requests']
 watched_review_requests = db['watched_review_requests']
-
+#db['messages'].drop()
+if "messages" not in db.collection_names():
+    db.create_collection("messages", capped=True, size=200)
+messages = db["messages"]
 
 always_fetch = True
 
@@ -64,6 +68,33 @@ def get_url(url, auth=None, always_fetch=always_fetch):
         return c['content']
 
 
+class DBEntry():
+    def __init__(self, collection, query):
+        self._collection = collection
+        self._query = query
+
+    def __enter__(self):
+        self._entry = self._collection.find_one(self._query)
+
+        if self._entry is None:
+            self._entry = {}
+
+        self.public_entry = copy.deepcopy(self._entry)
+
+        return self.public_entry
+
+    def __exit__(self, type, value, traceback):
+        if '_id' not in self.public_entry and '_id' in self._entry:
+            self.public_entry['_id'] = self.entry['_id']
+        if self.public_entry != self._entry:
+            self._collection.save(self.public_entry)
+            messages.insert({
+                "k": "update_time",
+                "v": "",
+                "t": time.time(),
+            })
+
+
 def get_cards():
     url = 'https://canonical.leankit.com/kanban/api/boards/103148069'
     auth = HTTPBasicAuth(settings.leankit_user, settings.leankit_pass)
@@ -75,15 +106,11 @@ def get_cards():
             for user in card['AssignedUsers']:
                 if user['FullName'] == 'James Tunnicliffe':
                     url = 'https://canonical.leankit.com/Boards/View/103148069/' + str(card['Id'])
-                    c = my_cards.find_one({'CardUrl': url})
-                    if c is None:
-                        c = {}
-
-                    c['CardUrl'] = url
-                    c['BoardTitle'] = board['ReplyData'][0]['Title']
-                    c['LaneTitle'] = lane['Title']
-                    c['Title'] = card['Title']
-                    my_cards.save(c)
+                    with DBEntry(my_cards, {'CardUrl': url}) as c:
+                        c['CardUrl'] = url
+                        c['BoardTitle'] = board['ReplyData'][0]['Title']
+                        c['LaneTitle'] = lane['Title']
+                        c['Title'] = card['Title']
 
 
 def get_bugs():
@@ -92,32 +119,27 @@ def get_bugs():
 
     me = launchpad.people[settings.LP_USER]
     for bug in me.searchTasks(assignee=me):
-        db_bug = my_bugs.find_one({'self_link': bug.bug.self_link})
-        if not db_bug:
-            db_bug = {'self_link': bug.bug.self_link}
-        db_bug['id'] = bug.bug.id
-        db_bug['http_etag'] = bug.http_etag
-        db_bug['title'] = bug.bug.title
-        db_bug['url'] = bug.web_link
-        db_bug['target'] = bug.bug_target_display_name
-        db_bug['importance'] = bug.importance
-        db_bug['status'] = bug.status
-        my_bugs.save(db_bug)
+        with DBEntry(my_bugs, {'self_link': bug.bug.self_link}) as db_bug:
+            db_bug['self_link'] = bug.bug.self_link
+            db_bug['id'] = bug.bug.id
+            db_bug['http_etag'] = bug.http_etag
+            db_bug['title'] = bug.bug.title
+            db_bug['url'] = bug.web_link
+            db_bug['target'] = bug.bug_target_display_name
+            db_bug['importance'] = bug.importance
+            db_bug['status'] = bug.status
 
         parent_bug = bug
         for bug in parent_bug.related_tasks.entries:
-            db_bug = my_bugs.find_one({'self_link': bug['self_link']})
-            if not db_bug:
+            with DBEntry(my_bugs, {'self_link': bug['self_link']}) as db_bug:
                 db_bug = {'self_link': bug['self_link']}
-            db_bug['id'] = parent_bug.bug.id
-            db_bug['http_etag'] = bug['http_etag']
-            db_bug['title'] = bug['title']
-            db_bug['url'] = bug['web_link']
-            db_bug['target'] = bug['bug_target_display_name']
-            db_bug['importance'] = bug['importance']
-            db_bug['status'] = bug['status']
-            my_bugs.save(db_bug)
-
+                db_bug['id'] = parent_bug.bug.id
+                db_bug['http_etag'] = bug['http_etag']
+                db_bug['title'] = bug['title']
+                db_bug['url'] = bug['web_link']
+                db_bug['target'] = bug['bug_target_display_name']
+                db_bug['importance'] = bug['importance']
+                db_bug['status'] = bug['status']
 
     # Get bugs I have asked next_up to notify me about
     bug_watch.drop()
@@ -164,20 +186,13 @@ def get_reviews():
 
     for r in all['review_requests']:
         if r['links']['submitter']['title'] == settings.REVIEWBOARD_USER:
-            rev = my_review_requests.find_one({'absolute_url': r['absolute_url']})
-            if rev is None:
-                rev = {}
-            for k, v in r:
-                rev[k] = v
-            my_review_requests.save(rev)
+            with DBEntry(my_review_requests, {'absolute_url': r['absolute_url']}) as rev:
+                rev.update(r)
 
     for r in watched['watched_review_requests']:
         rev = watched_review_requests.find_one({'absolute_url': r['absolute_url']})
-        if rev is None:
-            rev = {}
-        for k, v in r:
-            rev[k] = v
-        watched_review_requests.save(rev)
+        with DBEntry(watched_review_requests, {'absolute_url': r['absolute_url']}) as rev:
+            rev.update(r)
 
 
 def parse_calendar():
