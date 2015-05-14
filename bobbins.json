@@ -1,0 +1,782 @@
+[
+  {
+    "_id": "54f42f128c8f9d500753de94",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "anastasiamac block-list-cli",
+    "duration": 1071422,
+    "fullDisplayName": "github-merge-juju #2348",
+    "id": "2015-03-02_08-26-30",
+    "keepLog": false,
+    "number": 2348,
+    "params": {
+      "base": "master",
+      "pr": "1713",
+      "ref": "block-list-cli",
+      "repo": "https://github.com/anastasiamac/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425284790064,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2348/"
+  },
+  {
+    "_id": "54f42f128c8f9d500753de96",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "anastasiamac block-list-cli",
+    "duration": 338706,
+    "fullDisplayName": "github-merge-juju #2347",
+    "id": "2015-03-02_08-16-29",
+    "keepLog": false,
+    "number": 2347,
+    "params": {
+      "base": "master",
+      "pr": "1713",
+      "ref": "block-list-cli",
+      "repo": "https://github.com/anastasiamac/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425284189352,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2347/"
+  },
+  {
+    "_id": "54f42f128c8f9d500753de98",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "howbazaar jenv-store-server-uuid",
+    "duration": 1055018,
+    "fullDisplayName": "github-merge-juju #2346",
+    "id": "2015-03-02_05-09-34",
+    "keepLog": false,
+    "number": 2346,
+    "params": {
+      "base": "master",
+      "pr": "1710",
+      "ref": "jenv-store-server-uuid",
+      "repo": "https://github.com/howbazaar/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425272974195,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2346/"
+  },
+  {
+    "_id": "54f42f128c8f9d500753de9a",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "katco- goamz-v3-support",
+    "duration": 1061613,
+    "fullDisplayName": "github-merge-juju #2345",
+    "id": "2015-03-02_04-51-52",
+    "keepLog": false,
+    "number": 2345,
+    "params": {
+      "base": "master",
+      "pr": "1712",
+      "ref": "goamz-v3-support",
+      "repo": "https://github.com/katco-/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425271912182,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2345/"
+  },
+  {
+    "_id": "54f42f128c8f9d500753de9c",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "howbazaar jenv-store-server-uuid",
+    "duration": 1161687,
+    "fullDisplayName": "github-merge-juju #2344",
+    "id": "2015-03-02_04-32-29",
+    "keepLog": false,
+    "number": 2344,
+    "params": {
+      "base": "master",
+      "pr": "1710",
+      "ref": "jenv-store-server-uuid",
+      "repo": "https://github.com/howbazaar/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425270749273,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2344/"
+  },
+  {
+    "_id": "54f42f138c8f9d500753de9e",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "wallyworld storage-provider-defaults",
+    "duration": 1066779,
+    "fullDisplayName": "github-merge-juju #2343",
+    "id": "2015-03-02_02-45-16",
+    "keepLog": false,
+    "number": 2343,
+    "params": {
+      "base": "master",
+      "pr": "1696",
+      "ref": "storage-provider-defaults",
+      "repo": "https://github.com/wallyworld/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425264316386,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2343/"
+  },
+  {
+    "_id": "54f42f138c8f9d500753dea0",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "cherylj revert-ensure-availability",
+    "duration": 1062801,
+    "fullDisplayName": "github-merge-juju #2342",
+    "id": "2015-03-02_02-27-33",
+    "keepLog": false,
+    "number": 2342,
+    "params": {
+      "base": "master",
+      "pr": "1687",
+      "ref": "revert-ensure-availability",
+      "repo": "https://github.com/cherylj/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425263253583,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2342/"
+  },
+  {
+    "_id": "54f42f138c8f9d500753dea2",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "wallyworld storage-provider-defaults",
+    "duration": 1161583,
+    "fullDisplayName": "github-merge-juju #2341",
+    "id": "2015-03-02_02-08-11",
+    "keepLog": false,
+    "number": 2341,
+    "params": {
+      "base": "master",
+      "pr": "1696",
+      "ref": "storage-provider-defaults",
+      "repo": "https://github.com/wallyworld/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425262091602,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2341/"
+  },
+  {
+    "_id": "54f42f138c8f9d500753dea4",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "cherylj revert-ensure-availability",
+    "duration": 1180714,
+    "fullDisplayName": "github-merge-juju #2340",
+    "id": "2015-03-02_01-48-30",
+    "keepLog": false,
+    "number": 2340,
+    "params": {
+      "base": "master",
+      "pr": "1687",
+      "ref": "revert-ensure-availability",
+      "repo": "https://github.com/cherylj/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425260910473,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2340/"
+  },
+  {
+    "_id": "54f42f138c8f9d500753dea6",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "wallyworld storage-provider-defaults",
+    "duration": 1089926,
+    "fullDisplayName": "github-merge-juju #2339",
+    "id": "2015-03-02_00-46-30",
+    "keepLog": false,
+    "number": 2339,
+    "params": {
+      "base": "master",
+      "pr": "1696",
+      "ref": "storage-provider-defaults",
+      "repo": "https://github.com/wallyworld/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425257190064,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2339/"
+  },
+  {
+    "_id": "54f42f138c8f9d500753dea8",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "wallyworld storage-provider-defaults",
+    "duration": 1073558,
+    "fullDisplayName": "github-merge-juju #2338",
+    "id": "2015-03-01_22-50-28",
+    "keepLog": false,
+    "number": 2338,
+    "params": {
+      "base": "master",
+      "pr": "1696",
+      "ref": "storage-provider-defaults",
+      "repo": "https://github.com/wallyworld/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425250228859,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2338/"
+  },
+  {
+    "_id": "54f42f148c8f9d500753deaa",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "johnweldon vet-warning-typo",
+    "duration": 1063337,
+    "fullDisplayName": "github-merge-juju #2337",
+    "id": "2015-03-01_18-07-26",
+    "keepLog": false,
+    "number": 2337,
+    "params": {
+      "base": "master",
+      "pr": "1708",
+      "ref": "vet-warning-typo",
+      "repo": "https://github.com/johnweldon/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425233246972,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2337/"
+  },
+  {
+    "_id": "54f42f148c8f9d500753deac",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "johnweldon simplify-actions-filter",
+    "duration": 1137118,
+    "fullDisplayName": "github-merge-juju #2336",
+    "id": "2015-03-01_17-48-29",
+    "keepLog": false,
+    "number": 2336,
+    "params": {
+      "base": "master",
+      "pr": "1709",
+      "ref": "simplify-actions-filter",
+      "repo": "https://github.com/johnweldon/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425232109851,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2336/"
+  },
+  {
+    "_id": "54f42f148c8f9d500753deae",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "dimitern enable-ip-forwarding-at-container-init",
+    "duration": 1073275,
+    "fullDisplayName": "github-merge-juju #2335",
+    "id": "2015-03-01_14-24-29",
+    "keepLog": false,
+    "number": 2335,
+    "params": {
+      "base": "master",
+      "pr": "1703",
+      "ref": "enable-ip-forwarding-at-container-init",
+      "repo": "https://github.com/dimitern/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425219869462,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2335/"
+  },
+  {
+    "_id": "54f42f148c8f9d500753deb0",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "ericsnowcurrently systemd-down-and-dirty",
+    "duration": 1091675,
+    "fullDisplayName": "github-merge-juju #2334",
+    "id": "2015-02-28_01-12-29",
+    "keepLog": false,
+    "number": 2334,
+    "params": {
+      "base": "master",
+      "pr": "1656",
+      "ref": "systemd-down-and-dirty",
+      "repo": "https://github.com/ericsnowcurrently/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425085949161,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2334/"
+  },
+  {
+    "_id": "54f42f148c8f9d500753deb2",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "ericsnowcurrently service-consolidate",
+    "duration": 1043227,
+    "fullDisplayName": "github-merge-juju #2333",
+    "id": "2015-02-28_00-08-29",
+    "keepLog": false,
+    "number": 2333,
+    "params": {
+      "base": "master",
+      "pr": "1674",
+      "ref": "service-consolidate",
+      "repo": "https://github.com/ericsnowcurrently/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425082109635,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2333/"
+  },
+  {
+    "_id": "54f42f158c8f9d500753deb4",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "ericsnowcurrently service-consolidate",
+    "duration": 226105,
+    "fullDisplayName": "github-merge-juju #2332",
+    "id": "2015-02-28_00-02-30",
+    "keepLog": false,
+    "number": 2332,
+    "params": {
+      "base": "master",
+      "pr": "1674",
+      "ref": "service-consolidate",
+      "repo": "https://github.com/ericsnowcurrently/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425081750365,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2332/"
+  },
+  {
+    "_id": "54f42f158c8f9d500753deb6",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "ericsnowcurrently ww3-gce",
+    "duration": 1064543,
+    "fullDisplayName": "github-merge-juju #2331",
+    "id": "2015-02-27_22-22-31",
+    "keepLog": false,
+    "number": 2331,
+    "params": {
+      "base": "master",
+      "pr": "1704",
+      "ref": "ww3-gce",
+      "repo": "https://github.com/ericsnowcurrently/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425075751531,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2331/"
+  },
+  {
+    "_id": "54f42f158c8f9d500753deb8",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "ericsnowcurrently ww3-gce",
+    "duration": 1050351,
+    "fullDisplayName": "github-merge-juju #2330",
+    "id": "2015-02-27_21-50-30",
+    "keepLog": false,
+    "number": 2330,
+    "params": {
+      "base": "master",
+      "pr": "1704",
+      "ref": "ww3-gce",
+      "repo": "https://github.com/ericsnowcurrently/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425073830043,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2330/"
+  },
+  {
+    "_id": "54f42f158c8f9d500753deba",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "ericsnowcurrently ww3-gce",
+    "duration": 1066096,
+    "fullDisplayName": "github-merge-juju #2329",
+    "id": "2015-02-27_21-30-33",
+    "keepLog": false,
+    "number": 2329,
+    "params": {
+      "base": "master",
+      "pr": "1704",
+      "ref": "ww3-gce",
+      "repo": "https://github.com/ericsnowcurrently/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425072633345,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2329/"
+  },
+  {
+    "_id": "54f42f158c8f9d500753debc",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "ericsnowcurrently ww3-gce",
+    "duration": 1070042,
+    "fullDisplayName": "github-merge-juju #2328",
+    "id": "2015-02-27_21-06-30",
+    "keepLog": false,
+    "number": 2328,
+    "params": {
+      "base": "master",
+      "pr": "1704",
+      "ref": "ww3-gce",
+      "repo": "https://github.com/ericsnowcurrently/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425071190323,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2328/"
+  },
+  {
+    "_id": "54f42f158c8f9d500753debe",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "johnweldon trivial-vet-fix",
+    "duration": 1046339,
+    "fullDisplayName": "github-merge-juju #2327",
+    "id": "2015-02-27_19-24-32",
+    "keepLog": false,
+    "number": 2327,
+    "params": {
+      "base": "master",
+      "pr": "1701",
+      "ref": "trivial-vet-fix",
+      "repo": "https://github.com/johnweldon/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425065072132,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2327/"
+  },
+  {
+    "_id": "54f42f168c8f9d500753dec0",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "johnweldon trivial-vet-fix",
+    "duration": 1263596,
+    "fullDisplayName": "github-merge-juju #2326",
+    "id": "2015-02-27_17-19-40",
+    "keepLog": false,
+    "number": 2326,
+    "params": {
+      "base": "master",
+      "pr": "1701",
+      "ref": "trivial-vet-fix",
+      "repo": "https://github.com/johnweldon/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425057580958,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2326/"
+  },
+  {
+    "_id": "54f42f168c8f9d500753dec2",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "dooferlad master-increase-maas-deploy-timeout",
+    "duration": 1038041,
+    "fullDisplayName": "github-merge-juju #2325",
+    "id": "2015-02-27_17-02-22",
+    "keepLog": false,
+    "number": 2325,
+    "params": {
+      "base": "master",
+      "pr": "1700",
+      "ref": "master-increase-maas-deploy-timeout",
+      "repo": "https://github.com/dooferlad/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425056542913,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2325/"
+  },
+  {
+    "_id": "54f42f168c8f9d500753dec4",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "johnweldon trivial-vet-fix",
+    "duration": 1984746,
+    "fullDisplayName": "github-merge-juju #2324",
+    "id": "2015-02-27_16-29-16",
+    "keepLog": false,
+    "number": 2324,
+    "params": {
+      "base": "master",
+      "pr": "1701",
+      "ref": "trivial-vet-fix",
+      "repo": "https://github.com/johnweldon/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425054556662,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2324/"
+  },
+  {
+    "_id": "54f42f168c8f9d500753dec6",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "dooferlad master-increase-maas-deploy-timeout",
+    "duration": 1308119,
+    "fullDisplayName": "github-merge-juju #2323",
+    "id": "2015-02-27_16-07-28",
+    "keepLog": false,
+    "number": 2323,
+    "params": {
+      "base": "master",
+      "pr": "1700",
+      "ref": "master-increase-maas-deploy-timeout",
+      "repo": "https://github.com/dooferlad/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425053248024,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2323/"
+  },
+  {
+    "_id": "54f42f168c8f9d500753dec8",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "bz2 err_nil_deref_1393986",
+    "duration": 1334261,
+    "fullDisplayName": "github-merge-juju #2322",
+    "id": "2015-02-27_15-45-13",
+    "keepLog": false,
+    "number": 2322,
+    "params": {
+      "base": "master",
+      "pr": "1184",
+      "ref": "err_nil_deref_1393986",
+      "repo": "https://github.com/bz2/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425051913759,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2322/"
+  },
+  {
+    "_id": "54f42f178c8f9d500753deca",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "johnweldon trivial-vet-fix",
+    "duration": 1282981,
+    "fullDisplayName": "github-merge-juju #2321",
+    "id": "2015-02-27_15-23-49",
+    "keepLog": false,
+    "number": 2321,
+    "params": {
+      "base": "master",
+      "pr": "1701",
+      "ref": "trivial-vet-fix",
+      "repo": "https://github.com/johnweldon/juju.git"
+    },
+    "result": "FAILURE",
+    "timestamp": 1425050629846,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2321/"
+  },
+  {
+    "_id": "54f42f178c8f9d500753decc",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "anastasiamac sort-status-naturally",
+    "duration": 1091480,
+    "fullDisplayName": "github-merge-juju #2320",
+    "id": "2015-02-27_15-05-38",
+    "keepLog": false,
+    "number": 2320,
+    "params": {
+      "base": "master",
+      "pr": "1668",
+      "ref": "sort-status-naturally",
+      "repo": "https://github.com/anastasiamac/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425049538363,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2320/"
+  },
+  {
+    "_id": "54f42f178c8f9d500753dece",
+    "artifacts": [],
+    "building": false,
+    "builtOn": "juju-core-slave",
+    "changeSet": {
+      "items": [],
+      "kind": null
+    },
+    "culprits": [],
+    "description": "anastasiamac block-update",
+    "duration": 1484873,
+    "fullDisplayName": "github-merge-juju #2319",
+    "id": "2015-02-27_14-40-53",
+    "keepLog": false,
+    "number": 2319,
+    "params": {
+      "base": "master",
+      "pr": "1695",
+      "ref": "block-update",
+      "repo": "https://github.com/anastasiamac/juju.git"
+    },
+    "result": "SUCCESS",
+    "timestamp": 1425048053488,
+    "url": "http://juju-ci.vapour.ws:8080/job/github-merge-juju/2319/"
+  }
+]

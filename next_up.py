@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import requests
 from requests.auth import HTTPBasicAuth
 import json
@@ -11,21 +13,35 @@ import datetime
 from dateutil import rrule, parser
 import time
 import copy
+from pprint import pprint
 
 
 BASE_DIR = os.path.dirname(__file__)
 client = pymongo.MongoClient()
+#client.drop_database('next_up')
 db = client['next_up']
+
+collections = [
+    'web_cache',
+    'bug_watch',
+    'my_bugs',
+    'my_cards',
+    'my_review_requests',
+    'watched_review_requests',
+    'ci_jobs']
+
+#for c in collections:
+#    db[c].drop()
+
 web_cache = db['web_cache']
 bug_watch = db['bug_watch']
 my_bugs = db['my_bugs']
+my_bugs.ensure_index('self_link')
 my_cards = db['my_cards']
 my_review_requests = db['my_review_requests']
 watched_review_requests = db['watched_review_requests']
-#db['messages'].drop()
-if "messages" not in db.collection_names():
-    db.create_collection("messages", capped=True, size=200)
-messages = db["messages"]
+ci_jobs = db['ci_jobs']
+ci_jobs.ensure_index('url')
 
 always_fetch = True
 
@@ -42,6 +58,7 @@ class CacheEntry():
             self.entry = {
                 'url': self._url,
                 'content': None,
+                'headers': {},
                 'new': True,
             }
 
@@ -56,16 +73,27 @@ class CacheEntry():
             self.save()
 
 
-def get_url(url, auth=None, always_fetch=always_fetch):
+def get_url(url, auth=None, etag=None, always_fetch=always_fetch):
     with CacheEntry(web_cache, url) as c:
         # TODO: handle etags
         if always_fetch:
             c['new'] = True
 
         if c.get('new'):
-            r = requests.get(url, auth=auth)
+            headers = {}
+            if etag:
+                headers['etag'] = etag
+            elif c.get('headers') and 'etag' in c['headers']:
+                headers['etag'] = c['headers']['etag']
+
+            r = requests.get(url, headers=headers, auth=auth)
             c['content'] = r.content
+            c['headers'] = dict(r.headers)
         return c['content']
+
+
+def ping_update():
+    requests.get("http://127.0.0.1/API/ping")
 
 
 class DBEntry():
@@ -88,212 +116,217 @@ class DBEntry():
             self.public_entry['_id'] = self.entry['_id']
         if self.public_entry != self._entry:
             self._collection.save(self.public_entry)
-            messages.insert({
-                "k": "update_time",
-                "v": "",
-                "t": time.time(),
-            })
+            print "Found update!"
+            pprint(self.public_entry)
+            pprint(self._entry)
+            ping_update()
 
 
 def get_cards():
-    url = 'https://canonical.leankit.com/kanban/api/boards/103148069'
+    base_url = 'https://canonical.leankit.com/kanban/api/'
+    board_url = base_url + 'boards/103148069'
+    task_url = base_url + '/v1/board/103148069/card/{}/taskboard'
     auth = HTTPBasicAuth(settings.leankit_user, settings.leankit_pass)
-    board = json.loads(get_url(url, auth))
+    board = json.loads(get_url(board_url, auth=auth))
     cards = []
+
+    # Store metadata for the board against the board URL
+    with DBEntry(my_cards, {'Url': board_url}) as c:
+        c['Url'] = board_url
+        c['Board'] = True
+        c['lanes'] = {}
+        for lane in board['ReplyData'][0]['Lanes']:
+            c['lanes'][lane['Title']] = lane['Id']
 
     for lane in board['ReplyData'][0]['Lanes']:
         for card in lane['Cards']:
             for user in card['AssignedUsers']:
                 if user['FullName'] == 'James Tunnicliffe':
                     url = 'https://canonical.leankit.com/Boards/View/103148069/' + str(card['Id'])
+                    tasks = json.loads(get_url(task_url.format(card['Id']), auth))
                     with DBEntry(my_cards, {'CardUrl': url}) as c:
+
                         c['CardUrl'] = url
                         c['BoardTitle'] = board['ReplyData'][0]['Title']
                         c['LaneTitle'] = lane['Title']
                         c['Title'] = card['Title']
+                        c['moveUrl'] = base_url +\
+                            'board/{boardId}/MoveCard/{cardId}/lane/'.format(
+                                boardId="103148069",
+                                cardId=card['Id'],
+                            )
+
+                        c['Tasks'] = []
+
+                        if tasks['ReplyCode'] == 200:
+                            #pprint(tasks)
+                            c['TaskLanes'] = {}
+                            for task_lane in tasks['ReplyData'][0]['Lanes']:
+                                c['TaskLanes'][task_lane['Title']] = task_lane['Id']
+                                for task in task_lane['Cards']:
+                                    c['Tasks'].append({
+                                        'LaneTitle': task['LaneTitle'],
+                                        'Title': task['Title'],
+                                        'moveUrl': base_url +
+                                                   'v1/board/{boardId}/move/card/{cardId}/tasks/{taskId}/lane/'.format(
+                                                       boardId="103148069",
+                                                       cardId=card['Id'],
+                                                       taskId=task['Id'],
+                                                   )
+
+                                    })
 
 
 def get_bugs():
     cachedir = os.path.join(BASE_DIR, '.launchpadlib/cache/')
     launchpad = Launchpad.login_anonymously('just testing', 'production', cachedir)
 
+    updated_bugs = []
+    bug_ids = []
+    for bug in my_bugs.find():
+        bug_ids.append(bug['id'])
+
+    for bug_id in bug_ids:
+        bug_top_level = launchpad.bugs[bug_id]
+        for bug in bug_top_level.bug_tasks.entries:
+
+            with DBEntry(my_bugs, {'self_link': bug['self_link']}) as db_bug:
+                db_bug['self_link'] = bug['self_link']
+                db_bug['id'] = bug_id
+                db_bug['title'] = bug_top_level.title
+                db_bug['url'] = bug['web_link']
+                db_bug['target_project'] = bug['bug_target_display_name']
+                db_bug['milestone'] = bug['milestone_link']
+                db_bug['importance'] = bug['importance']
+                db_bug['status'] = bug['status']
+                db_bug['tags'] = bug_top_level.tags
+
+        updated_bugs.append(bug_id)
+
     me = launchpad.people[settings.LP_USER]
     for bug in me.searchTasks(assignee=me):
+        if bug.bug.id in updated_bugs:
+            continue
+
         with DBEntry(my_bugs, {'self_link': bug.bug.self_link}) as db_bug:
-            db_bug['self_link'] = bug.bug.self_link
+            db_bug['self_link'] = bug.self_link
             db_bug['id'] = bug.bug.id
-            db_bug['http_etag'] = bug.http_etag
             db_bug['title'] = bug.bug.title
             db_bug['url'] = bug.web_link
             db_bug['target'] = bug.bug_target_display_name
             db_bug['importance'] = bug.importance
             db_bug['status'] = bug.status
 
+        updated_bugs.append(bug.bug.id)
+
         parent_bug = bug
         for bug in parent_bug.related_tasks.entries:
             with DBEntry(my_bugs, {'self_link': bug['self_link']}) as db_bug:
-                db_bug = {'self_link': bug['self_link']}
+                db_bug['self_link'] = bug['self_link']
                 db_bug['id'] = parent_bug.bug.id
-                db_bug['http_etag'] = bug['http_etag']
-                db_bug['title'] = bug['title']
+                db_bug['title'] = parent_bug.bug.title
                 db_bug['url'] = bug['web_link']
                 db_bug['target'] = bug['bug_target_display_name']
                 db_bug['importance'] = bug['importance']
                 db_bug['status'] = bug['status']
 
-    # Get bugs I have asked next_up to notify me about
-    bug_watch.drop()
-    #bug_watch.save({
-    #    'backend': 'lp',
-    #    'id': 1416006,
-    #})
-    for bug in bug_watch.find():
-        if bug['backend'] == 'lp':
-            lp_bug = launchpad.bugs[bug['id']]
-            updated = False
-            if(not bug.get('http_etag') or
-               lp_bug.http_etag != bug.get('http_etag')):
-                # New or updated
-                updated = True
-                bug['http_etag'] = lp_bug.http_etag
-                bug['title'] = lp_bug.title
-                bug['url'] = lp_bug.web_link
-                if not bug.get('tasks'):
-                    bug['tasks'] = {}
-            for task in lp_bug.bug_tasks:
-                task.self_link = re.sub('\.', '_', task.self_link)
-                if(not task.self_link in bug['tasks'] or
-                   bug['tasks'][task.self_link]['http_etag'] != task.http_etag):
-                    updated = True
-                    bug['tasks'][task.self_link] = {
-                        'status': task.status,
-                        'http_etag': task.http_etag,
-                    }
-            if updated:
-                bug_watch.save(bug)
+
+def get_ci_jobs():
+    ci_url = 'http://juju-ci.vapour.ws:8080/job/github-merge-juju/api/json'
+    github_url = 'https://github.com/' + settings.GITHUB_USER + '/juju.git'
+
+    all = json.loads(get_url(ci_url))
+    urls = []
+    for build in all['builds'][:30]:
+        urls.append(build['url'])
+        with DBEntry(ci_jobs, {'url': build['url']}) as c:
+            if 'params' not in c or c['params']['repo'] == github_url:
+
+                build_detail = json.loads(get_url(build['url'] + '/api/json'))
+
+                params = ci_parameters(build_detail['actions'])
+                c['params'] = params
+                for k, v in build_detail.iteritems():
+                    if k != 'actions':
+                        c[k] = v
+
+                c['mine'] = params['repo'] == github_url
+
+    for ci_job in ci_jobs.find():
+        if ci_job['url'] not in urls:
+            ci_jobs.remove({'url': ci_job['url']})
+            ping_update()
+
+
+
+def ci_parameters(action_list):
+    params = {}
+    for action in action_list:
+        if action.get('parameters'):
+            for parameter in action['parameters']:
+                params[parameter['name']] = parameter['value']
+    return params
 
 
 def get_reviews():
-    watched = json.loads(get_url('http://' +
-                   settings.REVIEWBOARD_DOMAIN +
-                   '/api/users/' +
-                   settings.REVIEWBOARD_USER +
-                   '/watched/review-requests/'))
+    try:
+        watched = json.loads(get_url('http://' +
+                       settings.REVIEWBOARD_DOMAIN +
+                       '/api/users/' +
+                       settings.REVIEWBOARD_USER +
+                       '/watched/review-requests/'))
 
-    all = json.loads(get_url('http://' +
-                   settings.REVIEWBOARD_DOMAIN +
-                   '/api/review-requests/'))
+        all = json.loads(get_url('http://' +
+                       settings.REVIEWBOARD_DOMAIN +
+                       '/api/review-requests/'))
+    except ValueError:
+        print "Couldn't load all review data. Maybe next time..."
+        return
 
+    urls = []
     for r in all['review_requests']:
+        urls.append(r['absolute_url'])
         if r['links']['submitter']['title'] == settings.REVIEWBOARD_USER:
             with DBEntry(my_review_requests, {'absolute_url': r['absolute_url']}) as rev:
                 rev.update(r)
+    for rev in my_review_requests.find():
+        if rev['absolute_url'] not in urls:
+            my_review_requests.remove({'absolute_url': rev['absolute_url']})
+            ping_update()
 
     for r in watched['watched_review_requests']:
-        rev = watched_review_requests.find_one({'absolute_url': r['absolute_url']})
         with DBEntry(watched_review_requests, {'absolute_url': r['absolute_url']}) as rev:
             rev.update(r)
 
 
-def parse_calendar():
-    cal_noise = get_url(settings.ICAL_URL, always_fetch=True)
-    state = None
-    cal_lines = []
-    jsonable = {
-        'events': [],
-    }
-    events = []
-    for line in cal_noise.splitlines():
-        if len(line) > 0 and line[0] == ' ':
-            cal_lines[-1] += line[1:]
-        else:
-            cal_lines.append(line)
+def gen_go_structs():
+    for c in collections:
+        if c == "web_cache":
+            continue
 
-    for line in cal_lines:
-        try:
-            key, value = line.split(':', 1)
-        except ValueError:
-            print ">>>>>", line
-        else:
-            key = key.lower()
-            if key == "begin" and value.lower() == "vevent":
-                state = value
-                events.append({})
-            elif key == "end":
-                state = None
-            else:
-                if state:
-                    key = re.sub(";tzid.*", "", key)
-                    #if key in ['dtstart', 'dtend', 'status', 'summary', 'rrule']:
+        e = db[c].find_one()
+        if e is None:
+            continue
 
-                    if key == 'dtstart' or key == 'dtend':
-                        dt = parser.parse(value)
-                        value = dt.isoformat()
-                    events[-1][key] = value
+        print 'type {} struct {{'.format(c)
 
-    key_translate = {
-        'byday': 'byweekday',
-    }
-    now = datetime.datetime.now()
-    then = datetime.datetime.now() + datetime.timedelta(days=10)
-    for event in events:
-        if event.get('rrule'):
-            print "-" * 80
-            print event['summary']
-            print event['dtstart']
-            print event['rrule']
-            rules = event['rrule'].split(';')
+        for key in e:
+            go_name = key[0].upper() + key[1:]
+            print '    {name} string `bson:"{bsonRepr}"`'.format(name=go_name, bsonRepr=key)
 
-            starargs = {
-                'dtstart': parser.parse(event['dtstart'][0:15]),
-            }
-            for rule in rules:
-                key, value = rule.split('=')
-                key = key.lower()
-                if key in key_translate:
-                    key = key_translate[key]
-
-                values = value.split(',')
-                if len(values) > 1:
-                    starargs[key] = []
-
-                for value in values:
-                    # Translate strings into rrule constants
-                    if hasattr(rrule, value):
-                        value = getattr(rrule, value)
-
-                    if key == 'until':
-                        #value = parser.parse(value[0:15])
-                        #print value
-                        value = datetime.datetime.strptime(value[0:15], "%Y%m%dT%H%M%S")
-
-                    try:
-                        value = int(value)
-                    except TypeError:
-                        pass
-
-                    if key in starargs and isinstance(starargs[key], list):
-                        starargs[key].append(value)
-                    else:
-                        starargs[key] = value
-
-            for start_time in list(rrule.rrule(**starargs).between(now, then)):
-                jsonable['events'].append(event.copy())
-                jsonable['events'][-1]['dtstart'] = start_time.isoformat()
-                print "  ", event['summary'], start_time.isoformat()
-
-        else:
-            jsonable['events'].append(event)
-
-    for event in jsonable['events']:
-        print event['summary'], event['dtstart']
-
-    return json.dumps(jsonable)
-
+        print '}'
 
 if __name__ == '__main__':
+    #get_cards()
+    #exit(0)
     while True:
+        print str(datetime.datetime.now())
         get_bugs()
+        print "."
         get_cards()
+        print "."
         get_reviews()
+        print "."
+        get_ci_jobs()
+        print "#"
         time.sleep(60*5)
