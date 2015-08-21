@@ -17,7 +17,12 @@
       class="min-padding">
     <a href="{{ card.CardUrl }}">{{ card.Title }}</a>
     <span class="label" ng-class="cardLaneLabel(card)">{{ card.LaneTitle }}</span>
-    <div ng-repeat="task in card.Tasks" class="indent">
+
+
+    <i class="fa fa-plus-circle" ng-hide="!hasTasks(card) || !hideTasks(card)" ng-click="card.hide = false"></i>
+    <i class="fa fa-minus-circle" ng-hide="!hasTasks(card) || hideTasks(card)" ng-click="card.hide = true"></i>
+
+    <div ng-repeat="task in card.Tasks" class="indent" ng-hide="hideTasks(card)">
       {{ task.Title }} <!--span class="label" ng-class="cardLaneLabel(task)">{{ task.LaneTitle }}</span-->
       <div class="btn-group shrinkwrap" dropdown is-open="task.isopen">
         <button type="button" class="btn dropdown-toggle inlinebutton" ng-class="cardButtonClass(task)" dropdown-toggle ng-disabled="disabled">

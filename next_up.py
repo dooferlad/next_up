@@ -3,20 +3,21 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import json
-import settings
 import pymongo
 import os
 from launchpadlib.launchpad import Launchpad
-import re
-from bson import json_util
 import datetime
-from dateutil import rrule, parser
 import time
 import copy
+import yaml
 from pprint import pprint
+import subprocess
 
 
 BASE_DIR = os.path.dirname(__file__)
+with open(os.path.join(BASE_DIR, 'settings.yaml')) as s:
+    settings = yaml.load(s.read())
+
 client = pymongo.MongoClient()
 #client.drop_database('next_up')
 db = client['next_up']
@@ -124,11 +125,10 @@ class DBEntry():
 
 def get_cards():
     base_url = 'https://canonical.leankit.com/kanban/api/'
-    board_url = base_url + 'boards/103148069'
-    task_url = base_url + '/v1/board/103148069/card/{}/taskboard'
-    auth = HTTPBasicAuth(settings.leankit_user, settings.leankit_pass)
+    board_url = base_url + 'boards/101652562'
+    task_url = base_url + '/v1/board/101652562/card/{}/taskboard'
+    auth = HTTPBasicAuth(settings['leankit_user'], settings['leankit_pass'])
     board = json.loads(get_url(board_url, auth=auth))
-    cards = []
 
     # Store metadata for the board against the board URL
     with DBEntry(my_cards, {'Url': board_url}) as c:
@@ -138,28 +138,29 @@ def get_cards():
         for lane in board['ReplyData'][0]['Lanes']:
             c['lanes'][lane['Title']] = lane['Id']
 
+    seen_cards = []
+
     for lane in board['ReplyData'][0]['Lanes']:
         for card in lane['Cards']:
             for user in card['AssignedUsers']:
                 if user['FullName'] == 'James Tunnicliffe':
-                    url = 'https://canonical.leankit.com/Boards/View/103148069/' + str(card['Id'])
+                    url = 'https://canonical.leankit.com/Boards/View/101652562/' + str(card['Id'])
                     tasks = json.loads(get_url(task_url.format(card['Id']), auth))
                     with DBEntry(my_cards, {'CardUrl': url}) as c:
-
+                        seen_cards.append(url)
                         c['CardUrl'] = url
                         c['BoardTitle'] = board['ReplyData'][0]['Title']
                         c['LaneTitle'] = lane['Title']
                         c['Title'] = card['Title']
                         c['moveUrl'] = base_url +\
                             'board/{boardId}/MoveCard/{cardId}/lane/'.format(
-                                boardId="103148069",
+                                boardId="101652562",
                                 cardId=card['Id'],
                             )
 
                         c['Tasks'] = []
 
                         if tasks['ReplyCode'] == 200:
-                            #pprint(tasks)
                             c['TaskLanes'] = {}
                             for task_lane in tasks['ReplyData'][0]['Lanes']:
                                 c['TaskLanes'][task_lane['Title']] = task_lane['Id']
@@ -169,13 +170,15 @@ def get_cards():
                                         'Title': task['Title'],
                                         'moveUrl': base_url +
                                                    'v1/board/{boardId}/move/card/{cardId}/tasks/{taskId}/lane/'.format(
-                                                       boardId="103148069",
+                                                       boardId="101652562",
                                                        cardId=card['Id'],
                                                        taskId=task['Id'],
                                                    )
-
                                     })
-
+    for card in my_cards.find():
+        if 'CardUrl' in card and card['CardUrl'] not in seen_cards:
+            my_cards.remove({'CardUrl': card['CardUrl']})
+            ping_update()
 
 def get_bugs():
     cachedir = os.path.join(BASE_DIR, '.launchpadlib/cache/')
@@ -203,7 +206,7 @@ def get_bugs():
 
         updated_bugs.append(bug_id)
 
-    me = launchpad.people[settings.LP_USER]
+    me = launchpad.people[settings['LP_USER']]
     for bug in me.searchTasks(assignee=me):
         if bug.bug.id in updated_bugs:
             continue
@@ -233,7 +236,7 @@ def get_bugs():
 
 def get_ci_jobs():
     ci_url = 'http://juju-ci.vapour.ws:8080/job/github-merge-juju/api/json'
-    github_url = 'https://github.com/' + settings.GITHUB_USER + '/juju.git'
+    github_url = 'https://github.com/' + settings['GITHUB_USER'] + '/juju.git'
 
     all = json.loads(get_url(ci_url))
     urls = []
@@ -271,13 +274,13 @@ def ci_parameters(action_list):
 def get_reviews():
     try:
         watched = json.loads(get_url('http://' +
-                       settings.REVIEWBOARD_DOMAIN +
+                       settings['REVIEWBOARD_DOMAIN'] +
                        '/api/users/' +
-                       settings.REVIEWBOARD_USER +
+                       settings['REVIEWBOARD_USER'] +
                        '/watched/review-requests/'))
 
         all = json.loads(get_url('http://' +
-                       settings.REVIEWBOARD_DOMAIN +
+                       settings['REVIEWBOARD_DOMAIN'] +
                        '/api/review-requests/'))
     except ValueError:
         print "Couldn't load all review data. Maybe next time..."
@@ -286,7 +289,7 @@ def get_reviews():
     urls = []
     for r in all['review_requests']:
         urls.append(r['absolute_url'])
-        if r['links']['submitter']['title'] == settings.REVIEWBOARD_USER:
+        if r['links']['submitter']['title'] == settings['REVIEWBOARD_USER']:
             with DBEntry(my_review_requests, {'absolute_url': r['absolute_url']}) as rev:
                 rev.update(r)
     for rev in my_review_requests.find():
@@ -321,6 +324,8 @@ if __name__ == '__main__':
     #exit(0)
     while True:
         print str(datetime.datetime.now())
+        subprocess.call("go run get_google_calendar.go", shell=True)
+        print "."
         get_bugs()
         print "."
         get_cards()

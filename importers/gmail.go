@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-    "gopkg.in/mgo.v2"
 	"google.golang.org/api/gmail/v1"
+	"gopkg.in/mgo.v2"
 )
 
 type message struct {
@@ -42,7 +42,7 @@ func GmailUpdate(localGmail *mgo.Collection, client *http.Client) {
 			if err != nil {
 				log.Fatalf("Unable to retrieve message %v: %v", m.Id, err)
 			}
-            //switch
+			//switch
 			for _, h := range msg.Payload.Headers {
 				fmt.Printf("%v: %v\n", h.Name, h.Value)
 			}

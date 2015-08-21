@@ -112,9 +112,12 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
 
     $scope.ci_job_filter = function(job) {
       return job.mine === true
-    }
+    };
 
     $scope.card_filter = function(card) {
+      if(card.hasOwnProperty('Board') && card.Board){
+        return false;
+      }
       return card.LaneTitle != "Merged";
     };
 
@@ -214,5 +217,30 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
     $scope.taskUpdate = function(card, task, laneTitle) {
       task.LaneTitle = laneTitle;
       $http.post("/API/cards", {url: task.moveUrl + card.TaskLanes[laneTitle] + "/position/0"});
-    }
+    };
+
+    $scope.hasTasks = function(card){
+      if(card.hasOwnProperty('Tasks')) {
+        if(card.Tasks.length == 0){
+          return false;
+        }
+      } else {
+        return false;
+      }
+      return true;
+    };
+
+    $scope.hideTasks = function (card) {
+      var hide = true;
+      if (card.hasOwnProperty('hide')) {
+        return card.hide;
+      }
+      card.Tasks.every(function (val, index, array) {
+        if (val.LaneTitle !== "Done") {
+          hide = false;
+        }
+        return true;
+      });
+      return hide;
+    };
   }]);
