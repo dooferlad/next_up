@@ -13,18 +13,47 @@
 
 <h2>Cards</h2>
 <div layout="column">
-  <div ng-repeat="card in cards | filter:card_filter"
+  <div ng-repeat="card in shared_data.cards | filter:card_filter"
       class="min-padding">
     <a href="{{ card.CardUrl }}">{{ card.Title }}</a>
-    <span class="label" ng-class="cardLaneLabel(card)">{{ card.LaneTitle }}</span>
 
+    <!--span class="label">{{ card.Tags }}</span-->
+    <span class="label">{{ card.PriorityText }}</span>
+    <span class="label">{{ card.Size }}</span>
 
-    <i class="fa fa-plus-circle" ng-hide="!hasTasks(card) || !hideTasks(card)" ng-click="card.hide = false"></i>
-    <i class="fa fa-minus-circle" ng-hide="!hasTasks(card) || hideTasks(card)" ng-click="card.hide = true"></i>
+    <div class="btn-group shrinkwrap" dropdown is-open="card.isopen" ng-class="cardLaneLabel(card)">
+      <button
+        type="button"
+        class="btn dropdown-toggle inlinebutton"
+        dropdown-toggle
+        ng-disabled="disabled">
+        {{ card.LaneTitle }} <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" role="menu">
+        <li><a href="#/" ng-repeat="lane in lanes" ng-click="cardUpdate(card, lane)">{{ lane }}</a></li>
+      </ul>
+    </div>
 
+    <div class="btn-group shrinkwrap">
+      <button
+        type="button"
+        class="btn inlinebutton"
+        ng-click="editCard(card)">
+        Edit
+      </button>
+    </div>
+
+    <i class="fa fa-minus-circle" ng-hide="!card.showDesc" ng-click="card.showDesc = false"></i>
+    <i class="fa fa-info-circle" ng-hide="card.showDesc" ng-click="card.showDesc = true"></i>
+
+    <i class="fa fa-expand" ng-hide="!hasTasks(card) || !hideTasks(card)" ng-click="card.hide = false"></i>
+    <i class="fa fa-compress" ng-hide="!hasTasks(card) || hideTasks(card)" ng-click="card.hide = true"></i>
+
+    <p ng-bind-html="card.Description" ng-hide="!card.showDesc"></p>
     <div ng-repeat="task in card.Tasks" class="indent" ng-hide="hideTasks(card)">
-      {{ task.Title }} <!--span class="label" ng-class="cardLaneLabel(task)">{{ task.LaneTitle }}</span-->
+      {{ task.Title }}
       <div class="btn-group shrinkwrap" dropdown is-open="task.isopen">
+
         <button type="button" class="btn dropdown-toggle inlinebutton" ng-class="cardButtonClass(task)" dropdown-toggle ng-disabled="disabled">
           {{ task.LaneTitle }} <span class="caret"></span>
         </button>
@@ -33,8 +62,10 @@
           <li><a href="#/" ng-click="taskUpdate(card, task, 'Doing')">Doing</a></li>
           <li><a href="#/" ng-click="taskUpdate(card, task, 'Done')">Done</a></li>
         </ul>
+
       </div>
     </div>
+
   </div>
 </div>
 

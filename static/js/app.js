@@ -5,7 +5,8 @@
 var mediaApp = angular.module('mediaApp', [
   'ngRoute',
   'mediaControllers',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'ngSanitize',
 ]);
 
 mediaApp.config(['$routeProvider',
@@ -13,6 +14,10 @@ mediaApp.config(['$routeProvider',
         $routeProvider.
             when('/', {
                 templateUrl: '/partials/list.html'
+            }).
+            when('/edit/:id', {
+                controller: 'EditCtrl',
+                templateUrl: '/partials/editor.html'
             }).
             otherwise({ redirectTo: '/' });
     }]);

@@ -4,10 +4,86 @@
 
 var mediaControllers = angular.module('mediaControllers', []);
 
-mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
-  function ($scope, $http, $interval) {
+mediaControllers.factory('SharedData', function () {
+  return {};
+});
 
+function get_cards($scope, $http, callback) {
+  $http.get('/API/cards').success(function (data) {
+    // We could fromat the data here so we can foreach over many data sources:
+    // $scope.content.push({'heading': 'Cards', 'data': data});
+    // This reduces flexibility though - can't handle cards differently from
+    // bugs. Fine for name + url lists, not useful for other stuff.
+    $scope.shared_data.cards = [];
+    $scope.lanes = [];
 
+    data.every(function (card) {
+      if (card.hasOwnProperty('Board') && card.Board) {
+        $scope.shared_data.board = card;
+        for (var key in card.lanes) {
+          if (card.lanes.hasOwnProperty(key)) {
+
+            // We ignore In Progress and Done because they are parent lanes
+            if (key !== "In Progress" && key !== "Done") {
+              $scope.lanes.push(key);
+            }
+          }
+        }
+        return true;
+      }
+
+      // Real cards
+      card.md = toMarkdown(card.Description);
+      card.Description = marked(card.md);
+      $scope.shared_data.cards.push(card);
+
+      return true;
+    });
+
+    if(callback != undefined) {
+      callback();
+    }
+  });
+}
+
+mediaControllers.controller('EditCtrl', ['$scope', '$routeParams', '$location', '$http', 'SharedData',
+  function ($scope, $routeParams, $location, $http, SharedData) {
+    $scope.shared_data = SharedData;
+
+    $scope.editor = ace.edit("editor");
+    $scope.editor.setTheme("ace/theme/chrome");
+    $scope.editor.getSession().setMode("ace/mode/markdown");
+
+    $scope.updateEditor = function() {
+      $scope.cardIndex = 0;
+      while($scope.shared_data.cards[$scope.cardIndex]._id != $routeParams.id) {
+        $scope.cardIndex++;
+      }
+
+      $scope.editor.getSession().setValue(toMarkdown($scope.shared_data.cards[$scope.cardIndex].Description));
+      $scope.editor.resize();
+    };
+
+    if (!$scope.shared_data.hasOwnProperty('cards')) {
+      get_cards($scope, $http, $scope.updateEditor);
+    } else {
+      $scope.updateEditor();
+    }
+
+    $scope.saveCard = function() {
+      $scope.shared_data.cards[$scope.cardIndex].Description = marked($scope.editor.getSession().getValue());
+      $http.post("/API/updateCardDescription", $scope.shared_data.cards[$scope.cardIndex]);
+      $location.path("/");
+    };
+
+    $scope.discardChanges = function() {
+      $location.path("/");
+    };
+  }]);
+
+mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval', '$location', 'SharedData',
+  function ($scope, $http, $interval, $location, SharedData) {
+    $scope.shared_data = SharedData;
     $scope.socket = io();
     $scope.socket.on('update', function(msg) {
       $scope.update();
@@ -45,12 +121,36 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
     });
 
     $scope.update = function() {
-      $http.get('/API/cards').success(function (data) {
+        $http.get('/API/cards').success(function (data) {
         // We could fromat the data here so we can foreach over many data sources:
         // $scope.content.push({'heading': 'Cards', 'data': data});
         // This reduces flexibility though - can't handle cards differently from
         // bugs. Fine for name + url lists, not useful for other stuff.
-        $scope.cards = data;
+        $scope.shared_data.cards = [];
+        $scope.lanes = [];
+
+        data.every(function(card) {
+          if (card.hasOwnProperty('Board') && card.Board) {
+            $scope.shared_data.board = card;
+            for (var key in card.lanes) {
+              if (card.lanes.hasOwnProperty(key)) {
+
+                // We ignore In Progress and Done because they are parent lanes
+                if(key !== "In Progress" && key !== "Done") {
+                  $scope.lanes.push(key);
+                }
+              }
+            }
+            return true;
+          }
+
+          // Real cards
+          card.md = toMarkdown(card.Description);
+          card.Description = marked(card.md);
+          $scope.shared_data.cards.push(card);
+
+          return true;
+        });
       });
 
       $http.get('/API/bugs').success(function (data) {
@@ -75,6 +175,9 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
 
       $http.get('/API/calendar').success(function (data) {
         $scope.calendar = [];
+        if(data === "") {
+          return;
+        }
         data.every(function(event){
           var d = new Date();
           event.starttime = Date.parse(event.Start);
@@ -173,12 +276,21 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
         case "Done":
         case "Archive":
         case "Backlog":
+        case "Merged":
           return "";
+
         case "Review":
+        case "Under Review":
+        case "Landing":
           return "label-success";
+
         case "Investigating":
         case "ToDo":
-          return "label-primary";
+        case "Iteration Backlog":
+          return "label-warning";
+
+        case "Actively Working":
+        case "In Progress":
         case "Doing":
         case "Coding":
           return "label-info";
@@ -219,6 +331,13 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
       $http.post("/API/cards", {url: task.moveUrl + card.TaskLanes[laneTitle] + "/position/0"});
     };
 
+    $scope.cardUpdate = function(card, laneTitle) {
+      card.LaneTitle = laneTitle;
+      var urlValue = card.moveUrl + $scope.shared_data.board.lanes[laneTitle] + "/position/0";
+      console.log(urlValue);
+      $http.post("/API/cards", {url: urlValue});
+    };
+
     $scope.hasTasks = function(card){
       if(card.hasOwnProperty('Tasks')) {
         if(card.Tasks.length == 0){
@@ -243,4 +362,9 @@ mediaControllers.controller('ToolbarCtrl', ['$scope', '$http', '$interval',
       });
       return hide;
     };
+
+    $scope.editCard = function(card) {
+      $location.path("/edit/" + card._id);
+    };
   }]);
+

@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"encoding/json"
@@ -228,7 +228,7 @@ func Run() {
 	}
 	defer sess.Close()
 	state := serverState{}
-	db := sess.DB("next_up")
+	db := sess.DB("stats_gubbins")
 	state.cards = db.C("my_cards")
 	state.bugs = db.C("my_bugs")
 	state.reviewRequests = db.C("my_review_requests")
@@ -275,5 +275,9 @@ func Run() {
 	go state.forwardUpdatesToSocketIO()
 	http.Handle("/", router)
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8210", nil))
+}
+
+func main() {
+	Run()
 }

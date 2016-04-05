@@ -22,6 +22,9 @@ client = pymongo.MongoClient()
 #client.drop_database('next_up')
 db = client['next_up']
 
+db['my_cards'].drop()
+db['my_bugs'].drop()
+
 collections = [
     'web_cache',
     'bug_watch',
@@ -94,10 +97,10 @@ def get_url(url, auth=None, etag=None, always_fetch=always_fetch):
 
 
 def ping_update():
-    requests.get("http://127.0.0.1/API/ping")
+    requests.get("http://127.0.0.1:8080/API/ping")
 
 
-class DBEntry():
+class DBEntry:
     def __init__(self, collection, query):
         self._collection = collection
         self._query = query
@@ -107,14 +110,38 @@ class DBEntry():
 
         if self._entry is None:
             self._entry = {}
+        else:
+            self._decode_keys(self._entry)
 
         self.public_entry = copy.deepcopy(self._entry)
 
         return self.public_entry
 
+    def _encode_keys(self, e):
+        for k, v in e.iteritems():
+            if isinstance(v, dict):
+                self._encode_keys(v)
+            if '.' in k or '$' in k:
+                new_key = k.replace('.', unichr(0xFF0E))
+                new_key = new_key.replace('$', unichr(0xFF04))
+                e[new_key] = e.pop(k)
+        return e
+
+    def _decode_keys(self, e):
+        for k, v in e.iteritems():
+            if isinstance(v, dict):
+                self._encode_keys(v)
+            if unichr(0xFF0E) in k or  unichr(0xFF04) in k:
+                new_key = k.replace(unichr(0xFF0E), '.')
+                new_key = new_key.replace(unichr(0xFF04), '$')
+                e[new_key] = e.pop(k)
+        return e
+
     def __exit__(self, type, value, traceback):
         if '_id' not in self.public_entry and '_id' in self._entry:
-            self.public_entry['_id'] = self.entry['_id']
+            self.public_entry['_id'] = self._entry['_id']
+
+        self._encode_keys(self.public_entry)
         if self.public_entry != self._entry:
             self._collection.save(self.public_entry)
             print "Found update!"
@@ -129,6 +156,7 @@ def get_cards():
     task_url = base_url + '/v1/board/101652562/card/{}/taskboard'
     auth = HTTPBasicAuth(settings['leankit_user'], settings['leankit_pass'])
     board = json.loads(get_url(board_url, auth=auth))
+    lane_id_to_title = {}
 
     # Store metadata for the board against the board URL
     with DBEntry(my_cards, {'Url': board_url}) as c:
@@ -137,6 +165,7 @@ def get_cards():
         c['lanes'] = {}
         for lane in board['ReplyData'][0]['Lanes']:
             c['lanes'][lane['Title']] = lane['Id']
+            lane_id_to_title[lane['Id']] = lane['Title']
 
     seen_cards = []
 
@@ -144,14 +173,21 @@ def get_cards():
         for card in lane['Cards']:
             for user in card['AssignedUsers']:
                 if user['FullName'] == 'James Tunnicliffe':
+                    pprint(card)
                     url = 'https://canonical.leankit.com/Boards/View/101652562/' + str(card['Id'])
                     tasks = json.loads(get_url(task_url.format(card['Id']), auth))
                     with DBEntry(my_cards, {'CardUrl': url}) as c:
                         seen_cards.append(url)
+
                         c['CardUrl'] = url
                         c['BoardTitle'] = board['ReplyData'][0]['Title']
-                        c['LaneTitle'] = lane['Title']
-                        c['Title'] = card['Title']
+                        c['LaneTitle'] = lane_id_to_title[card['LaneId']]
+                        #for key in ['Description', 'Title',
+                        #            'Tags', 'PriorityText', 'Size']:
+                        #    c[key] = copy.deepcopy(card[key])
+                        for key in card.keys():
+                            c[key] = copy.deepcopy(card[key])
+
                         c['moveUrl'] = base_url +\
                             'board/{boardId}/MoveCard/{cardId}/lane/'.format(
                                 boardId="101652562",
@@ -179,6 +215,7 @@ def get_cards():
         if 'CardUrl' in card and card['CardUrl'] not in seen_cards:
             my_cards.remove({'CardUrl': card['CardUrl']})
             ping_update()
+
 
 def get_bugs():
     cachedir = os.path.join(BASE_DIR, '.launchpadlib/cache/')
@@ -324,6 +361,7 @@ if __name__ == '__main__':
     #exit(0)
     while True:
         print str(datetime.datetime.now())
+        db['calendar'].drop()  # until I start tidying up the database...
         subprocess.call("go run get_google_calendar.go", shell=True)
         print "."
         get_bugs()
