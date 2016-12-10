@@ -14,3 +14,7 @@ services.
 Defining types for all the JSON documents I wanted to load is dull, especially
 when I am not using all of them. Using interfaces and type assertions is also
 dull.
+
+## No tests? Commented out code? Is all your code like this?
+No. This is an evolving hack to improve my day and, litterally, works for me.
+It isn't good code, but that doesn't meen I shouldn't share it.
