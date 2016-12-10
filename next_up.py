@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -12,6 +12,7 @@ import copy
 import yaml
 from pprint import pprint
 import subprocess
+import lazr
 
 
 BASE_DIR = os.path.dirname(__file__)
@@ -93,7 +94,7 @@ def get_url(url, auth=None, etag=None, always_fetch=always_fetch):
             r = requests.get(url, headers=headers, auth=auth)
             c['content'] = r.content
             c['headers'] = dict(r.headers)
-        return c['content']
+        return str(c['content'], 'utf-8')
 
 
 def ping_update():
@@ -118,22 +119,22 @@ class DBEntry:
         return self.public_entry
 
     def _encode_keys(self, e):
-        for k, v in e.iteritems():
+        for k, v in list(e.items()):
             if isinstance(v, dict):
                 self._encode_keys(v)
             if '.' in k or '$' in k:
-                new_key = k.replace('.', unichr(0xFF0E))
-                new_key = new_key.replace('$', unichr(0xFF04))
+                new_key = k.replace('.', chr(0xFF0E))
+                new_key = new_key.replace('$', chr(0xFF04))
                 e[new_key] = e.pop(k)
         return e
 
     def _decode_keys(self, e):
-        for k, v in e.iteritems():
+        for k, v in list(e.items()):
             if isinstance(v, dict):
                 self._encode_keys(v)
-            if unichr(0xFF0E) in k or  unichr(0xFF04) in k:
-                new_key = k.replace(unichr(0xFF0E), '.')
-                new_key = new_key.replace(unichr(0xFF04), '$')
+            if chr(0xFF0E) in k or chr(0xFF04) in k:
+                new_key = k.replace(chr(0xFF0E), '.')
+                new_key = new_key.replace(chr(0xFF04), '$')
                 e[new_key] = e.pop(k)
         return e
 
@@ -144,16 +145,17 @@ class DBEntry:
         self._encode_keys(self.public_entry)
         if self.public_entry != self._entry:
             self._collection.save(self.public_entry)
-            print "Found update!"
-            pprint(self.public_entry)
-            pprint(self._entry)
-            ping_update()
+            # print "Found update!"
+            # pprint(self.public_entry)
+            # pprint(self._entry)
+            # ping_update()
 
 
 def get_cards():
     base_url = 'https://canonical.leankit.com/kanban/api/'
-    board_url = base_url + 'boards/101652562'
-    task_url = base_url + '/v1/board/101652562/card/{}/taskboard'
+    board_id = '122969419'
+    board_url = base_url + 'boards/' + board_id
+    task_url = base_url + '/v1/board/' + board_id + '/card/{}/taskboard'
     auth = HTTPBasicAuth(settings['leankit_user'], settings['leankit_pass'])
     board = json.loads(get_url(board_url, auth=auth))
     lane_id_to_title = {}
@@ -173,8 +175,9 @@ def get_cards():
         for card in lane['Cards']:
             for user in card['AssignedUsers']:
                 if user['FullName'] == 'James Tunnicliffe':
-                    pprint(card)
-                    url = 'https://canonical.leankit.com/Boards/View/101652562/' + str(card['Id'])
+                    # pprint(card)
+                    url = 'https://canonical.leankit.com/Boards/View/{}/{}'.format(
+                        board_id, card['Id'])
                     tasks = json.loads(get_url(task_url.format(card['Id']), auth))
                     with DBEntry(my_cards, {'CardUrl': url}) as c:
                         seen_cards.append(url)
@@ -185,7 +188,7 @@ def get_cards():
                         #for key in ['Description', 'Title',
                         #            'Tags', 'PriorityText', 'Size']:
                         #    c[key] = copy.deepcopy(card[key])
-                        for key in card.keys():
+                        for key in list(card.keys()):
                             c[key] = copy.deepcopy(card[key])
 
                         c['moveUrl'] = base_url +\
@@ -286,7 +289,7 @@ def get_ci_jobs():
 
                 params = ci_parameters(build_detail['actions'])
                 c['params'] = params
-                for k, v in build_detail.iteritems():
+                for k, v in list(build_detail.items()):
                     if k != 'actions':
                         c[k] = v
 
@@ -320,7 +323,7 @@ def get_reviews():
                        settings['REVIEWBOARD_DOMAIN'] +
                        '/api/review-requests/'))
     except ValueError:
-        print "Couldn't load all review data. Maybe next time..."
+        print("Couldn't load all review data. Maybe next time...")
         return
 
     urls = []
@@ -348,28 +351,38 @@ def gen_go_structs():
         if e is None:
             continue
 
-        print 'type {} struct {{'.format(c)
+        print(('type {} struct {{'.format(c)))
 
         for key in e:
             go_name = key[0].upper() + key[1:]
-            print '    {name} string `bson:"{bsonRepr}"`'.format(name=go_name, bsonRepr=key)
+            print(('    {name} string `bson:"{bsonRepr}"`'.format(name=go_name, bsonRepr=key)))
 
-        print '}'
+        print('}')
 
 if __name__ == '__main__':
     #get_cards()
     #exit(0)
     while True:
-        print str(datetime.datetime.now())
+        print((str(datetime.datetime.now())))
+        print("Fetching calendar...")
         db['calendar'].drop()  # until I start tidying up the database...
         subprocess.call("go run get_google_calendar.go", shell=True)
-        print "."
-        get_bugs()
-        print "."
+
+        print("  cards...")
         get_cards()
-        print "."
+        print("  reviews...")
         get_reviews()
-        print "."
+        print("  CI jobs...")
         get_ci_jobs()
-        print "#"
+
+        # Last, because slow
+        print("  bugs...")
+        try:
+            get_bugs()
+        except lazr.restfulclient.errors.ServerError as e:
+            print('Error talking to LP!')
+            pprint(e)
+            pass
+
+        print("  Sleeping...")
         time.sleep(60*5)
